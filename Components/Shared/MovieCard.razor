@@ -12,7 +12,17 @@
                 <i class="bi @GetStatusIcon(Movie.Status) me-1"></i>
                 @GetStatusDisplayName(Movie.Status)
             </span>
-            <span class="genre-badge">@Movie.Genre</span>
+            <div class="d-flex align-items-center gap-1">
+                <button type="button" 
+                        class="btn btn-sm btn-favorite-toggle" 
+                        title="@(Movie.IsFavorite ? "Remove from Favorites" : "Mark as Favorite")"
+                        @onclick="() => OnToggleFavorite.InvokeAsync(Movie)"
+                        @onclick:stopPropagation="true"
+                        style="pointer-events: auto; background: rgba(15, 23, 42, 0.85); border: none; border-radius: 50%; width: 30px; height: 30px; padding: 0; display: flex; align-items: center; justify-content: center; color: @(Movie.IsFavorite ? "#ef4444" : "#94a3b8");">
+                    <i class="bi @(Movie.IsFavorite ? "bi-heart-fill" : "bi-heart")"></i>
+                </button>
+                <span class="genre-badge">@Movie.Genre</span>
+            </div>
         </div>
     </div>
 
@@ -86,6 +96,7 @@
     [Parameter] public EventCallback<Movie> OnEdit { get; set; }
     [Parameter] public EventCallback<Movie> OnDelete { get; set; }
     [Parameter] public EventCallback<(Movie Movie, WatchStatus NewStatus)> OnStatusChange { get; set; }
+    [Parameter] public EventCallback<Movie> OnToggleFavorite { get; set; }
 
     private string GetPosterUrl()
     {
@@ -93,8 +104,6 @@
         {
             return Movie.PosterUrl;
         }
-        // Aesthetic placeholder using SVG data URI with movie title initials
-        var initials = string.Join("", Movie.Title.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(s => s[0]));
         return $"https://placehold.co/400x600/1e293b/94a3b8?text={Uri.EscapeDataString(Movie.Title)}";
     }
 

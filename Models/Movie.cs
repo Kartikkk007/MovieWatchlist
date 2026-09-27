@@ -40,6 +40,9 @@ public static class GenreList
 
 public class Movie
 {
+
+    public bool IsFavorite { get; set; } = false;
+    
     public int Id { get; set; }
 
     [Required(ErrorMessage = "Movie title is required")]
