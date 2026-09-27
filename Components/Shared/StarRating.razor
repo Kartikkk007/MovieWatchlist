@@ -1,0 +1,60 @@
+<div class="star-rating @(ReadOnly ? "read-only" : "interactive") star-@Size" @onmouseleave="HandleMouseLeave">
+    @for (int i = 1; i <= 5; i++)
+    {
+        var starIndex = i;
+        var isFilled = starIndex <= (_hoverValue ?? Value);
+        <button type="button" 
+                class="star-btn @(isFilled ? "filled" : "")" 
+                disabled="@ReadOnly"
+                @onclick="() => SetRating(starIndex)"
+                @onmouseenter="() => HandleMouseEnter(starIndex)"
+                title="@($"{starIndex} Star{(starIndex > 1 ? "s" : "")}")">
+            <i class="bi @(isFilled ? "bi-star-fill" : "bi-star")"></i>
+        </button>
+    }
+    @if (!ReadOnly && Value > 0)
+    {
+        <button type="button" class="btn-clear-rating ms-1" @onclick="ClearRating" title="Clear Rating">
+            <i class="bi bi-x-circle"></i>
+        </button>
+    }
+</div>
+
+@code {
+    [Parameter] public int Value { get; set; } = 0;
+    [Parameter] public EventCallback<int> ValueChanged { get; set; }
+    [Parameter] public bool ReadOnly { get; set; } = false;
+    [Parameter] public string Size { get; set; } = "md";
+
+    private int? _hoverValue;
+
+    private async Task SetRating(int rating)
+    {
+        if (ReadOnly) return;
+        Value = rating;
+        await ValueChanged.InvokeAsync(Value);
+    }
+
+    private async Task ClearRating()
+    {
+        if (ReadOnly) return;
+        Value = 0;
+        await ValueChanged.InvokeAsync(0);
+    }
+
+    private void HandleMouseEnter(int rating)
+    {
+        if (!ReadOnly)
+        {
+            _hoverValue = rating;
+        }
+    }
+
+    private void HandleMouseLeave()
+    {
+        if (!ReadOnly)
+        {
+            _hoverValue = null;
+        }
+    }
+}

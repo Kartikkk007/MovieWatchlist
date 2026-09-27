@@ -1,0 +1,149 @@
+@namespace MovieWatchlist.Components.Shared
+@using MovieWatchlist.Models
+
+@if (IsOpen)
+{
+    <div class="modal-backdrop-custom" @onclick="HandleCancel">
+        <div class="modal-dialog-custom" @onclick:stopPropagation="true">
+            <div class="modal-header-custom">
+                <h5 class="modal-title-custom">
+                    <i class="bi @(IsEditMode ? "bi-pencil-square text-warning" : "bi-plus-circle text-primary") me-2"></i>
+                    @(IsEditMode ? "Edit Movie" : "Add Movie to Watchlist")
+                </h5>
+                <button type="button" class="btn-close btn-close-white" @onclick="HandleCancel" aria-label="Close"></button>
+            </div>
+
+            <EditForm Model="@MovieModel" OnValidSubmit="HandleValidSubmit">
+                <DataAnnotationsValidator />
+                
+                <div class="modal-body-custom">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label-custom">Title <span class="text-danger">*</span></label>
+                            <InputText @bind-Value="MovieModel.Title" class="form-control form-control-custom" placeholder="e.g. Interstellar" />
+                            <ValidationMessage For="@(() => MovieModel.Title)" class="validation-msg" />
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label-custom">Release Year <span class="text-danger">*</span></label>
+                            <InputNumber @bind-Value="MovieModel.ReleaseYear" class="form-control form-control-custom" placeholder="2024" />
+                            <ValidationMessage For="@(() => MovieModel.ReleaseYear)" class="validation-msg" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Director</label>
+                            <InputText @bind-Value="MovieModel.Director" class="form-control form-control-custom" placeholder="e.g. Christopher Nolan" />
+                            <ValidationMessage For="@(() => MovieModel.Director)" class="validation-msg" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Genre <span class="text-danger">*</span></label>
+                            <InputSelect @bind-Value="MovieModel.Genre" class="form-select form-control-custom">
+                                @foreach (var genre in GenreList.All)
+                                {
+                                    <option value="@genre">@genre</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => MovieModel.Genre)" class="validation-msg" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Watch Status</label>
+                            <InputSelect @bind-Value="MovieModel.Status" class="form-select form-control-custom">
+                                <option value="@WatchStatus.PlanToWatch">Plan to Watch</option>
+                                <option value="@WatchStatus.Watching">Watching</option>
+                                <option value="@WatchStatus.Completed">Completed</option>
+                                <option value="@WatchStatus.Dropped">Dropped</option>
+                            </InputSelect>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Your Rating</label>
+                            <div class="pt-2">
+                                <StarRating Value="@MovieModel.Rating" 
+                                            ValueChanged="@((val) => MovieModel.Rating = val)" 
+                                            ReadOnly="false" 
+                                            Size="md" />
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label-custom">Poster Image URL (Optional)</label>
+                            <InputText @bind-Value="MovieModel.PosterUrl" class="form-control form-control-custom" placeholder="https://example.com/poster.jpg" />
+                            <ValidationMessage For="@(() => MovieModel.PosterUrl)" class="validation-msg" />
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label-custom">Notes & Thoughts</label>
+                            <InputTextArea @bind-Value="MovieModel.Notes" class="form-control form-control-custom" rows="3" placeholder="What did you think or why do you want to watch it?" />
+                            <ValidationMessage For="@(() => MovieModel.Notes)" class="validation-msg" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer-custom">
+                    <button type="button" class="btn btn-secondary-custom" @onclick="HandleCancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary-custom">
+                        <i class="bi @(IsEditMode ? "bi-check2-circle" : "bi-plus-circle") me-1"></i>
+                        @(IsEditMode ? "Save Changes" : "Add Movie")
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public Movie? MovieToEdit { get; set; }
+    [Parameter] public EventCallback<Movie> OnSave { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private Movie MovieModel { get; set; } = new();
+    private bool IsEditMode => MovieToEdit != null && MovieToEdit.Id > 0;
+
+    protected override void OnParametersSet()
+    {
+        if (IsOpen)
+        {
+            if (MovieToEdit != null)
+            {
+                // Clone movie to prevent direct mutation before saving
+                MovieModel = new Movie
+                {
+                    Id = MovieToEdit.Id,
+                    Title = MovieToEdit.Title,
+                    Director = MovieToEdit.Director,
+                    ReleaseYear = MovieToEdit.ReleaseYear,
+                    Genre = MovieToEdit.Genre,
+                    PosterUrl = MovieToEdit.PosterUrl,
+                    Status = MovieToEdit.Status,
+                    Rating = MovieToEdit.Rating,
+                    Notes = MovieToEdit.Notes,
+                    CreatedAt = MovieToEdit.CreatedAt,
+                    WatchedDate = MovieToEdit.WatchedDate
+                };
+            }
+            else
+            {
+                MovieModel = new Movie
+                {
+                    ReleaseYear = DateTime.UtcNow.Year,
+                    Genre = GenreList.All.FirstOrDefault() ?? "Action",
+                    Status = WatchStatus.PlanToWatch,
+                    Rating = 0
+                };
+            }
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        await OnSave.InvokeAsync(MovieModel);
+    }
+
+    private async Task HandleCancel()
+    {
+        await OnCancel.InvokeAsync();
+    }
+}

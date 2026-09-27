@@ -1,0 +1,52 @@
+@namespace MovieWatchlist.Components.Shared
+@using MovieWatchlist.Models
+
+@if (IsOpen && MovieToDelete != null)
+{
+    <div class="modal-backdrop-custom" @onclick="HandleCancel">
+        <div class="modal-dialog-custom modal-sm-custom" @onclick:stopPropagation="true">
+            <div class="modal-header-custom border-bottom-0 pb-0">
+                <h5 class="modal-title-custom text-danger">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>Delete Movie
+                </h5>
+                <button type="button" class="btn-close btn-close-white" @onclick="HandleCancel" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body-custom py-3">
+                <p class="mb-1">Are you sure you want to remove this movie from your watchlist?</p>
+                <div class="delete-movie-preview p-3 rounded my-2">
+                    <strong class="text-light">@MovieToDelete.Title</strong>
+                    <span class="text-muted ms-1">(@MovieToDelete.ReleaseYear)</span>
+                </div>
+                <small class="text-secondary">This action cannot be undone.</small>
+            </div>
+
+            <div class="modal-footer-custom border-top-0 pt-0">
+                <button type="button" class="btn btn-secondary-custom" @onclick="HandleCancel">Cancel</button>
+                <button type="button" class="btn btn-danger-custom" @onclick="HandleConfirm">
+                    <i class="bi bi-trash3 me-1"></i>Delete
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public Movie? MovieToDelete { get; set; }
+    [Parameter] public EventCallback<Movie> OnConfirm { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private async Task HandleConfirm()
+    {
+        if (MovieToDelete != null)
+        {
+            await OnConfirm.InvokeAsync(MovieToDelete);
+        }
+    }
+
+    private async Task HandleCancel()
+    {
+        await OnCancel.InvokeAsync();
+    }
+}

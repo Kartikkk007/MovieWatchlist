@@ -1,0 +1,350 @@
+@page "/"
+@rendermode InteractiveServer
+@inject IMovieService MovieService
+
+<PageTitle>Movie Watchlist</PageTitle>
+
+<div class="watchlist-container">
+    <!-- Top Action & Search Bar Header -->
+    <div class="watchlist-header mb-4">
+        <div class="row align-items-center g-3">
+            <div class="col-md-6 col-lg-7">
+                <h2 class="page-title mb-1">
+                    <i class="bi bi-film text-primary me-2"></i>My Movie Watchlist
+                </h2>
+                <p class="page-subtitle text-muted mb-0">Track, organize, and rate movies you want to watch or have completed.</p>
+            </div>
+            <div class="col-md-6 col-lg-5 text-md-end">
+                <button class="btn btn-primary-custom px-4 py-2" @onclick="OpenAddModal">
+                    <i class="bi bi-plus-lg me-2"></i>Add Movie
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert / Notification -->
+    @if (!string.IsNullOrEmpty(alertMessage))
+    {
+        <div class="alert alert-custom alert-@alertType alert-dismissible fade show d-flex align-items-center mb-4" role="alert">
+            <i class="bi @(alertType == "success" ? "bi-check-circle-fill" : "bi-info-circle-fill") me-2"></i>
+            <div>@alertMessage</div>
+            <button type="button" class="btn-close btn-close-white ms-auto" @onclick="DismissAlert"></button>
+        </div>
+    }
+
+    <!-- Filter & Search Controls Bar -->
+    <div class="filters-card p-3 mb-4">
+        <!-- Status Tabs -->
+        <div class="status-tabs mb-3">
+            <button class="status-tab @(selectedStatus == null ? "active" : "")" 
+                    @onclick="() => FilterByStatus(null)">
+                <span>All</span>
+                <span class="count-badge">@allMovies.Count</span>
+            </button>
+            <button class="status-tab tab-plan @(selectedStatus == WatchStatus.PlanToWatch ? "active" : "")" 
+                    @onclick="() => FilterByStatus(WatchStatus.PlanToWatch)">
+                <i class="bi bi-bookmark-plus me-1"></i>
+                <span>Plan to Watch</span>
+                <span class="count-badge">@GetCountByStatus(WatchStatus.PlanToWatch)</span>
+            </button>
+            <button class="status-tab tab-watching @(selectedStatus == WatchStatus.Watching ? "active" : "")" 
+                    @onclick="() => FilterByStatus(WatchStatus.Watching)">
+                <i class="bi bi-play-circle me-1"></i>
+                <span>Watching</span>
+                <span class="count-badge">@GetCountByStatus(WatchStatus.Watching)</span>
+            </button>
+            <button class="status-tab tab-completed @(selectedStatus == WatchStatus.Completed ? "active" : "")" 
+                    @onclick="() => FilterByStatus(WatchStatus.Completed)">
+                <i class="bi bi-check-circle-fill me-1"></i>
+                <span>Completed</span>
+                <span class="count-badge">@GetCountByStatus(WatchStatus.Completed)</span>
+            </button>
+            <button class="status-tab tab-dropped @(selectedStatus == WatchStatus.Dropped ? "active" : "")" 
+                    @onclick="() => FilterByStatus(WatchStatus.Dropped)">
+                <i class="bi bi-x-circle me-1"></i>
+                <span>Dropped</span>
+                <span class="count-badge">@GetCountByStatus(WatchStatus.Dropped)</span>
+            </button>
+        </div>
+
+        <div class="row g-2 align-items-center">
+            <!-- Search Bar -->
+            <div class="col-lg-5 col-md-6">
+                <div class="search-input-wrapper">
+                    <i class="bi bi-search search-icon"></i>
+                    <input type="text" 
+                           class="form-control form-control-custom ps-5" 
+                           placeholder="Search by title or director..." 
+                           @bind="searchQuery" 
+                           @bind:event="oninput" />
+                    @if (!string.IsNullOrEmpty(searchQuery))
+                    {
+                        <button class="btn-clear-search" @onclick="() => searchQuery = string.Empty">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    }
+                </div>
+            </div>
+
+            <!-- Genre Filter -->
+            <div class="col-lg-3 col-md-3 col-6">
+                <select class="form-select form-control-custom" @bind="selectedGenre">
+                    <option value="">All Genres</option>
+                    @foreach (var genre in genres)
+                    {
+                        <option value="@genre">@genre</option>
+                    }
+                </select>
+            </div>
+
+            <!-- Sort By -->
+            <div class="col-lg-4 col-md-3 col-6">
+                <select class="form-select form-control-custom" @bind="sortBy">
+                    <option value="recent">Recently Added</option>
+                    <option value="title_asc">Title (A to Z)</option>
+                    <option value="title_desc">Title (Z to A)</option>
+                    <option value="year_desc">Year (Newest first)</option>
+                    <option value="year_asc">Year (Oldest first)</option>
+                    <option value="rating_desc">Rating (Highest first)</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Movies Grid -->
+    @if (isLoading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading movies...</span>
+            </div>
+            <p class="text-muted mt-3">Loading your watchlist...</p>
+        </div>
+    }
+    else if (FilteredMovies.Count == 0)
+    {
+        <div class="empty-state-card text-center py-5 my-3">
+            <div class="empty-state-icon mb-3">
+                <i class="bi bi-camera-reels text-muted" style="font-size: 3.5rem;"></i>
+            </div>
+            @if (allMovies.Count == 0)
+            {
+                <h4 class="text-light">Your watchlist is empty!</h4>
+                <p class="text-muted mb-4">Start tracking movies by adding your first one now.</p>
+                <button class="btn btn-primary-custom px-4" @onclick="OpenAddModal">
+                    <i class="bi bi-plus-lg me-2"></i>Add First Movie
+                </button>
+            }
+            else
+            {
+                <h4 class="text-light">No movies found</h4>
+                <p class="text-muted mb-3">No movies match your current search and filter criteria.</p>
+                <button class="btn btn-outline-secondary btn-sm" @onclick="ResetFilters">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Filters
+                </button>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="movies-grid">
+            @foreach (var movie in FilteredMovies)
+            {
+                <MovieCard Movie="@movie" 
+                           OnEdit="OpenEditModal" 
+                           OnDelete="OpenDeleteModal" 
+                           OnStatusChange="HandleQuickStatusChange" />
+            }
+        </div>
+    }
+</div>
+
+<!-- Add / Edit Modal -->
+<MovieFormModal IsOpen="@isFormModalOpen" 
+                MovieToEdit="@movieToEdit" 
+                OnSave="HandleSaveMovie" 
+                OnCancel="CloseFormModal" />
+
+<!-- Delete Confirmation Modal -->
+<DeleteConfirmModal IsOpen="@isDeleteModalOpen" 
+                    MovieToDelete="@movieToDelete" 
+                    OnConfirm="HandleConfirmDelete" 
+                    OnCancel="CloseDeleteModal" />
+
+@code {
+    private List<Movie> allMovies = new();
+    private List<string> genres = new();
+    private bool isLoading = true;
+
+    // Filters & Sorting state
+    private WatchStatus? selectedStatus = null;
+    private string searchQuery = string.Empty;
+    private string selectedGenre = string.Empty;
+    private string sortBy = "recent";
+
+    // Modals state
+    private bool isFormModalOpen = false;
+    private Movie? movieToEdit = null;
+    private bool isDeleteModalOpen = false;
+    private Movie? movieToDelete = null;
+
+    // Alert state
+    private string? alertMessage;
+    private string alertType = "success";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        isLoading = true;
+        try
+        {
+            genres = await MovieService.GetGenresAsync();
+            allMovies = await MovieService.GetMoviesAsync();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private List<Movie> FilteredMovies
+    {
+        get
+        {
+            var result = allMovies.AsEnumerable();
+
+            if (selectedStatus.HasValue)
+            {
+                result = result.Where(m => m.Status == selectedStatus.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(searchQuery))
+            {
+                var query = searchQuery.Trim();
+                result = result.Where(m =>
+                    m.Title.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                    (!string.IsNullOrEmpty(m.Director) && m.Director.Contains(query, StringComparison.OrdinalIgnoreCase))
+                );
+            }
+
+            if (!string.IsNullOrWhiteSpace(selectedGenre))
+            {
+                result = result.Where(m => string.Equals(m.Genre, selectedGenre, StringComparison.OrdinalIgnoreCase));
+            }
+
+            result = sortBy switch
+            {
+                "title_asc" => result.OrderBy(m => m.Title),
+                "title_desc" => result.OrderByDescending(m => m.Title),
+                "year_desc" => result.OrderByDescending(m => m.ReleaseYear),
+                "year_asc" => result.OrderBy(m => m.ReleaseYear),
+                "rating_desc" => result.OrderByDescending(m => m.Rating).ThenByDescending(m => m.CreatedAt),
+                _ => result.OrderByDescending(m => m.CreatedAt)
+            };
+
+            return result.ToList();
+        }
+    }
+
+    private int GetCountByStatus(WatchStatus status)
+    {
+        return allMovies.Count(m => m.Status == status);
+    }
+
+    private void FilterByStatus(WatchStatus? status)
+    {
+        selectedStatus = status;
+    }
+
+    private void ResetFilters()
+    {
+        selectedStatus = null;
+        searchQuery = string.Empty;
+        selectedGenre = string.Empty;
+        sortBy = "recent";
+    }
+
+    private void OpenAddModal()
+    {
+        movieToEdit = null;
+        isFormModalOpen = true;
+    }
+
+    private void OpenEditModal(Movie movie)
+    {
+        movieToEdit = movie;
+        isFormModalOpen = true;
+    }
+
+    private void CloseFormModal()
+    {
+        isFormModalOpen = false;
+        movieToEdit = null;
+    }
+
+    private async Task HandleSaveMovie(Movie movie)
+    {
+        if (movie.Id == 0)
+        {
+            var added = await MovieService.AddMovieAsync(movie);
+            ShowAlert($"\"{added.Title}\" was successfully added to your watchlist!", "success");
+        }
+        else
+        {
+            var updated = await MovieService.UpdateMovieAsync(movie);
+            ShowAlert($"\"{updated.Title}\" was updated.", "success");
+        }
+
+        CloseFormModal();
+        allMovies = await MovieService.GetMoviesAsync();
+    }
+
+    private async Task HandleQuickStatusChange((Movie Movie, WatchStatus NewStatus) args)
+    {
+        var movie = args.Movie;
+        movie.Status = args.NewStatus;
+        if (args.NewStatus == WatchStatus.Completed && movie.WatchedDate == null)
+        {
+            movie.WatchedDate = DateTime.UtcNow;
+        }
+        await MovieService.UpdateMovieAsync(movie);
+        allMovies = await MovieService.GetMoviesAsync();
+        ShowAlert($"Status of \"{movie.Title}\" updated to {movie.Status}.", "info");
+    }
+
+    private void OpenDeleteModal(Movie movie)
+    {
+        movieToDelete = movie;
+        isDeleteModalOpen = true;
+    }
+
+    private void CloseDeleteModal()
+    {
+        isDeleteModalOpen = false;
+        movieToDelete = null;
+    }
+
+    private async Task HandleConfirmDelete(Movie movie)
+    {
+        var title = movie.Title;
+        await MovieService.DeleteMovieAsync(movie.Id);
+        CloseDeleteModal();
+        allMovies = await MovieService.GetMoviesAsync();
+        ShowAlert($"\"{title}\" was removed from your watchlist.", "info");
+    }
+
+    private void ShowAlert(string message, string type)
+    {
+        alertMessage = message;
+        alertType = type;
+    }
+
+    private void DismissAlert()
+    {
+        alertMessage = null;
+    }
+}

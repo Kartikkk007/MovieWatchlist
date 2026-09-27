@@ -1,0 +1,127 @@
+@namespace MovieWatchlist.Components.Shared
+@using MovieWatchlist.Models
+
+<div class="movie-card">
+    <div class="movie-poster-wrapper">
+        <img src="@GetPosterUrl()" 
+             alt="@Movie.Title" 
+             class="movie-poster-img"
+             loading="lazy" />
+        <div class="poster-overlay">
+            <span class="status-badge @GetStatusBadgeClass(Movie.Status)">
+                <i class="bi @GetStatusIcon(Movie.Status) me-1"></i>
+                @GetStatusDisplayName(Movie.Status)
+            </span>
+            <span class="genre-badge">@Movie.Genre</span>
+        </div>
+    </div>
+
+    <div class="movie-card-body">
+        <div class="movie-header">
+            <h5 class="movie-title text-truncate" title="@Movie.Title">@Movie.Title</h5>
+            <span class="movie-year">@Movie.ReleaseYear</span>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Movie.Director))
+        {
+            <div class="movie-director text-truncate" title="@Movie.Director">
+                <i class="bi bi-person-video me-1"></i> @Movie.Director
+            </div>
+        }
+
+        <div class="movie-rating-row my-2">
+            <StarRating Value="@Movie.Rating" ReadOnly="true" Size="sm" />
+            @if (Movie.Rating > 0)
+            {
+                <span class="rating-number ms-2">@Movie.Rating/5</span>
+            }
+            else
+            {
+                <span class="text-muted small ms-2">Unrated</span>
+            }
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Movie.Notes))
+        {
+            <p class="movie-notes" title="@Movie.Notes">
+                <i class="bi bi-chat-left-quote me-1 opacity-75"></i>@Movie.Notes
+            </p>
+        }
+
+        <div class="movie-card-actions mt-auto">
+            <div class="dropdown me-auto">
+                <button class="btn btn-sm btn-status-quick dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Change Status
+                </button>
+                <ul class="dropdown-menu dropdown-menu-dark shadow">
+                    @foreach (WatchStatus status in Enum.GetValues(typeof(WatchStatus)))
+                    {
+                        var s = status;
+                        <li>
+                            <button class="dropdown-item @(Movie.Status == s ? "active" : "")" 
+                                    @onclick="() => OnStatusChange.InvokeAsync((Movie, s))">
+                                <i class="bi @GetStatusIcon(s) me-2"></i>@GetStatusDisplayName(s)
+                            </button>
+                        </li>
+                    }
+                </ul>
+            </div>
+
+            <button class="btn btn-sm btn-outline-light btn-action-icon me-1" 
+                    title="Edit Movie" 
+                    @onclick="() => OnEdit.InvokeAsync(Movie)">
+                <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-danger btn-action-icon" 
+                    title="Delete Movie" 
+                    @onclick="() => OnDelete.InvokeAsync(Movie)">
+                <i class="bi bi-trash3"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public Movie Movie { get; set; } = default!;
+    [Parameter] public EventCallback<Movie> OnEdit { get; set; }
+    [Parameter] public EventCallback<Movie> OnDelete { get; set; }
+    [Parameter] public EventCallback<(Movie Movie, WatchStatus NewStatus)> OnStatusChange { get; set; }
+
+    private string GetPosterUrl()
+    {
+        if (!string.IsNullOrWhiteSpace(Movie.PosterUrl))
+        {
+            return Movie.PosterUrl;
+        }
+        // Aesthetic placeholder using SVG data URI with movie title initials
+        var initials = string.Join("", Movie.Title.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(s => s[0]));
+        return $"https://placehold.co/400x600/1e293b/94a3b8?text={Uri.EscapeDataString(Movie.Title)}";
+    }
+
+    private string GetStatusDisplayName(WatchStatus status) => status switch
+    {
+        WatchStatus.PlanToWatch => "Plan to Watch",
+        WatchStatus.Watching => "Watching",
+        WatchStatus.Completed => "Completed",
+        WatchStatus.Dropped => "Dropped",
+        _ => status.ToString()
+    };
+
+    private string GetStatusBadgeClass(WatchStatus status) => status switch
+    {
+        WatchStatus.PlanToWatch => "badge-plan",
+        WatchStatus.Watching => "badge-watching",
+        WatchStatus.Completed => "badge-completed",
+        WatchStatus.Dropped => "badge-dropped",
+        _ => "badge-secondary"
+    };
+
+    private string GetStatusIcon(WatchStatus status) => status switch
+    {
+        WatchStatus.PlanToWatch => "bi-bookmark-plus",
+        WatchStatus.Watching => "bi-play-circle",
+        WatchStatus.Completed => "bi-check-circle-fill",
+        WatchStatus.Dropped => "bi-x-circle",
+        _ => "bi-film"
+    };
+}
