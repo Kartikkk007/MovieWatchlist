@@ -34,9 +34,9 @@
 
     <!-- Filter & Search Controls Bar -->
     <div class="filters-card p-3 mb-4">
-        <!-- Status Tabs -->
+        <!-- Status & Favorites Tabs -->
         <div class="status-tabs mb-3">
-            <button class="status-tab @(selectedStatus == null ? "active" : "")" 
+            <button class="status-tab @(selectedStatus == null && !showOnlyFavorites ? "active" : "")" 
                     @onclick="() => FilterByStatus(null)">
                 <span>All</span>
                 <span class="count-badge">@allMovies.Count</span>
@@ -64,6 +64,15 @@
                 <i class="bi bi-x-circle me-1"></i>
                 <span>Dropped</span>
                 <span class="count-badge">@GetCountByStatus(WatchStatus.Dropped)</span>
+            </button>
+
+            <!-- Favorites Filter Tab -->
+            <button class="status-tab @(showOnlyFavorites ? "active" : "")" 
+                    style="@(showOnlyFavorites ? "background-color: #ef4444; border-color: #ef4444; color: white;" : "")"
+                    @onclick="ToggleFavoritesFilter">
+                <i class="bi @(showOnlyFavorites ? "bi-heart-fill text-white" : "bi-heart-fill text-danger") me-1"></i>
+                <span>Favorites</span>
+                <span class="count-badge">@allMovies.Count(m => m.IsFavorite)</span>
             </button>
         </div>
 
@@ -153,7 +162,8 @@
                 <MovieCard Movie="@movie" 
                            OnEdit="OpenEditModal" 
                            OnDelete="OpenDeleteModal" 
-                           OnStatusChange="HandleQuickStatusChange" />
+                           OnStatusChange="HandleQuickStatusChange"
+                           OnToggleFavorite="HandleToggleFavorite" />
             }
         </div>
     }
@@ -178,6 +188,7 @@
 
     // Filters & Sorting state
     private WatchStatus? selectedStatus = null;
+    private bool showOnlyFavorites = false;
     private string searchQuery = string.Empty;
     private string selectedGenre = string.Empty;
     private string sortBy = "recent";
@@ -222,6 +233,11 @@
                 result = result.Where(m => m.Status == selectedStatus.Value);
             }
 
+            if (showOnlyFavorites)
+            {
+                result = result.Where(m => m.IsFavorite);
+            }
+
             if (!string.IsNullOrWhiteSpace(searchQuery))
             {
                 var query = searchQuery.Trim();
@@ -258,11 +274,22 @@
     private void FilterByStatus(WatchStatus? status)
     {
         selectedStatus = status;
+        showOnlyFavorites = false; // reset favorites when picking status tab
+    }
+
+    private void ToggleFavoritesFilter()
+    {
+        showOnlyFavorites = !showOnlyFavorites;
+        if (showOnlyFavorites)
+        {
+            selectedStatus = null; // show all favorites regardless of status
+        }
     }
 
     private void ResetFilters()
     {
         selectedStatus = null;
+        showOnlyFavorites = false;
         searchQuery = string.Empty;
         selectedGenre = string.Empty;
         sortBy = "recent";
@@ -301,6 +328,14 @@
 
         CloseFormModal();
         allMovies = await MovieService.GetMoviesAsync();
+    }
+
+    private async Task HandleToggleFavorite(Movie movie)
+    {
+        movie.IsFavorite = !movie.IsFavorite;
+        await MovieService.UpdateMovieAsync(movie);
+        allMovies = await MovieService.GetMoviesAsync();
+        ShowAlert(movie.IsFavorite ? $"Added \"{movie.Title}\" to favorites ❤️" : $"Removed \"{movie.Title}\" from favorites", "info");
     }
 
     private async Task HandleQuickStatusChange((Movie Movie, WatchStatus NewStatus) args)
