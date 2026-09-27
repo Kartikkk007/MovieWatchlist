@@ -274,7 +274,7 @@
     private void FilterByStatus(WatchStatus? status)
     {
         selectedStatus = status;
-        showOnlyFavorites = false; // reset favorites when picking status tab
+        showOnlyFavorites = false;
     }
 
     private void ToggleFavoritesFilter()
@@ -282,7 +282,7 @@
         showOnlyFavorites = !showOnlyFavorites;
         if (showOnlyFavorites)
         {
-            selectedStatus = null; // show all favorites regardless of status
+            selectedStatus = null;
         }
     }
 
@@ -375,11 +375,3 @@
     private void ShowAlert(string message, string type)
     {
         alertMessage = message;
-        alertType = type;
-    }
-
-    private void DismissAlert()
-    {
-        alertMessage = null;
-    }
-}
