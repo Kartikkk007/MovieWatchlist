@@ -66,6 +66,14 @@
                                             Size="md" />
                             </div>
                         </div>
+                <div class="col-md-6 d-flex align-items-center pt-3">
+                <div class="form-check form-switch">
+                  <InputCheckbox @bind-Value="MovieModel.IsFavorite" class="form-check-input" id="favSwitch" />
+                 <label class="form-check-label text-light ms-2" for="favSwitch">
+            <i class="bi bi-heart-fill text-danger me-1"></i> Mark as Favorite
+                 </label>
+            </div>
+               </div>
 
                         <div class="col-12">
                             <label class="form-label-custom">Poster Image URL (Optional)</label>
