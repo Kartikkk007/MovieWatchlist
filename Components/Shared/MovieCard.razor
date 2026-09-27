@@ -82,6 +82,7 @@
 </div>
 
 @code {
+    [Parameter] public EventCallback<Movie> OnToggleFavorite { get; set; }
     [Parameter, EditorRequired] public Movie Movie { get; set; } = default!;
     [Parameter] public EventCallback<Movie> OnEdit { get; set; }
     [Parameter] public EventCallback<Movie> OnDelete { get; set; }
