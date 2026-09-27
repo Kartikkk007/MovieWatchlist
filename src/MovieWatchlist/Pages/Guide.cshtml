@@ -1,0 +1,64 @@
+@page
+@{
+    ViewData["Title"] = "GitHub Collaboration Guide";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom border-secondary">
+            <span class="fs-1 text-danger"><i class="bi bi-git"></i></span>
+            <div>
+                <h2 class="fw-bold mb-1">GitHub Collaboration Lab</h2>
+                <p class="text-secondary mb-0">Complete roadmap for practicing multi-account collaboration, Pull Requests, approvals, and merge conflicts.</p>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-6">
+                <div class="card h-100 bg-secondary bg-opacity-10 border-secondary">
+                    <div class="card-body">
+                        <h5 class="fw-bold text-white"><i class="bi bi-person-circle text-primary me-2"></i>Account 1 (Owner)</h5>
+                        <ul class="text-secondary small mb-0 ps-3">
+                            <li>Creates the repository on GitHub.</li>
+                            <li>Pushes initial <code>main</code> branch.</li>
+                            <li>Configures branch protection rules.</li>
+                            <li>Invites Account 2 as collaborator.</li>
+                            <li>Reviews and approves Pull Requests.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card h-100 bg-secondary bg-opacity-10 border-secondary">
+                    <div class="card-body">
+                        <h5 class="fw-bold text-white"><i class="bi bi-person-plus text-success me-2"></i>Account 2 (Contributor)</h5>
+                        <ul class="text-secondary small mb-0 ps-3">
+                            <li>Accepts repo invitation.</li>
+                            <li>Clones repo into a separate working folder.</li>
+                            <li>Creates feature branches (e.g. <code>feature/movie-runtime</code>).</li>
+                            <li>Pushes feature branches and opens Pull Requests.</li>
+                            <li>Practices resolving merge conflicts.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card bg-secondary bg-opacity-10 border-secondary mb-4">
+            <div class="card-header bg-black border-secondary">
+                <h5 class="fw-bold mb-0 text-white"><i class="bi bi-terminal me-2"></i>Full Detailed Guide</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-light">
+                    A comprehensive markdown walkthrough with copy-paste commands is provided in the repository root at:
+                </p>
+                <div class="p-3 bg-black rounded border border-secondary font-monospace text-info mb-3">
+                    COLLABORATION_GUIDE.md
+                </div>
+                <p class="text-secondary small mb-0">
+                    Open this file in your editor or on GitHub to follow step-by-step instructions with real branch simulation drills!
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

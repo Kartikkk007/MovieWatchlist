@@ -1,0 +1,21 @@
+## Ignore Visual Studio / VS Code temporary files and build output
+.vs/
+.vscode/
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Runtime data
+Data/movies.json
+
+## Test results
+TestResults/
+*.trx
+*.coverage
+
+## OS generated files
+.DS_Store
+Thumbs.db

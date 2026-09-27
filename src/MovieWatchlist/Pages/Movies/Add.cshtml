@@ -1,0 +1,87 @@
+@page
+@model MovieWatchlist.Pages.Movies.AddModel
+@{
+    ViewData["Title"] = "Add New Movie";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card bg-secondary bg-opacity-10 border-secondary shadow-lg">
+            <div class="card-header bg-black border-secondary py-3">
+                <h4 class="mb-0 fw-bold text-white"><i class="bi bi-plus-circle text-danger me-2"></i>Add Movie to Watchlist</h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Movie.Title" class="form-label fw-semibold">Movie Title *</label>
+                        <input asp-for="Movie.Title" class="form-control bg-dark text-light border-secondary" placeholder="e.g. Oppenheimer" />
+                        <span asp-validation-for="Movie.Title" class="text-danger small"></span>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="Movie.Director" class="form-label fw-semibold">Director</label>
+                            <input asp-for="Movie.Director" class="form-control bg-dark text-light border-secondary" placeholder="e.g. Christopher Nolan" />
+                            <span asp-validation-for="Movie.Director" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Movie.ReleaseYear" class="form-label fw-semibold">Release Year</label>
+                            <input asp-for="Movie.ReleaseYear" type="number" class="form-control bg-dark text-light border-secondary" />
+                            <span asp-validation-for="Movie.ReleaseYear" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="Movie.Genre" class="form-label fw-semibold">Genre *</label>
+                            <input asp-for="Movie.Genre" class="form-control bg-dark text-light border-secondary" list="genreSuggestions" placeholder="Select or type..." />
+                            <datalist id="genreSuggestions">
+                                @foreach (var g in Model.ExistingGenres)
+                                {
+                                    <option value="@g"></option>
+                                }
+                            </datalist>
+                            <span asp-validation-for="Movie.Genre" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Movie.Rating" class="form-label fw-semibold">Rating (1 to 5 Stars)</label>
+                            <select asp-for="Movie.Rating" class="form-select bg-dark text-light border-secondary">
+                                <option value="">No rating yet</option>
+                                <option value="5">⭐⭐⭐⭐⭐ (5 - Masterpiece)</option>
+                                <option value="4">⭐⭐⭐⭐ (4 - Great)</option>
+                                <option value="3">⭐⭐⭐ (3 - Good)</option>
+                                <option value="2">⭐⭐ (2 - Mediocre)</option>
+                                <option value="1">⭐ (1 - Poor)</option>
+                            </select>
+                            <span asp-validation-for="Movie.Rating" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input asp-for="Movie.IsWatched" class="form-check-input" type="checkbox" role="switch" id="isWatchedSwitch" />
+                            <label class="form-check-label fw-semibold" for="isWatchedSwitch">Already Watched</label>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Movie.Notes" class="form-label fw-semibold">Notes / Thoughts</label>
+                        <textarea asp-for="Movie.Notes" rows="3" class="form-control bg-dark text-light border-secondary" placeholder="Why do you want to watch it? Or short review..."></textarea>
+                        <span asp-validation-for="Movie.Notes" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a asp-page="/Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i> Cancel</a>
+                        <button type="submit" class="btn btn-danger fw-semibold px-4"><i class="bi bi-check2 me-1"></i> Save Movie</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
